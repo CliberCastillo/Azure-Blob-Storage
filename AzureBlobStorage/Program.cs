@@ -1,8 +1,13 @@
+using Azure.Storage.Blobs;
+
 var builder = WebApplication.CreateBuilder(args);
-
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+ConfigurationManager configuration = builder.Configuration;
 
+builder.Services.AddControllersWithViews();
+builder.Services.AddScoped(_ => {
+    return new BlobServiceClient(configuration.GetConnectionString("AccessKey"));
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
