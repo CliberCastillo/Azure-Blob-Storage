@@ -8,6 +8,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped(_ => {
     return new BlobServiceClient(configuration.GetConnectionString("AccessKey"));
 });
+builder.Services.AddApplicationInsightsTelemetry();
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
