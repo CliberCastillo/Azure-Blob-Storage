@@ -1,23 +1,33 @@
-﻿@{
+﻿@model List<AzureBlobStorage.Models.Blob>
+@{
     ViewData["Title"] = "Home Page";
 }
 <div class="container">
     <div class="row">
         <div class="col-6">
-            <form name="formEmpleado" method="post" enctype="multipart/form-data" asp-controller="Home" asp-action="InsertarEmpleado">
-                <label>Nombre:</label>
-                <input type="text" class="form-control" name="nombre" placeholder="Inrgesar su nombre" />
-                <label>Apellido:</label>
-                <input type="text" class="form-control" name="apellido" placeholder="Inrgesar su apellido" />
-                <label>Edad:</label>
-                <input type="number" class="form-control" name="edad" placeholder="Inrgesar su edad" />
+            <form name="formEmpleado" method="post" enctype="multipart/form-data" asp-controller="Home" asp-action="Index">
                 <label>Foto:</label>
-                <input type="file" class="form-control" name="perfil"/>
+                <input type="file" class="form-control" name="perfil" />
                 <br />
                 <button type="submit" class="btn btn-primary">Guardar</button>
-                <button type="reset" class="btn btn-danger">Borrar</button>
             </form>
         </div>
-        <div class="col-6"></div>
+        <div class="col-6">
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        @foreach (var imagen in Model)
+        {
+            <div class="col-3">
+                <div class="card" style="width: 15rem;">
+                    <img src="@imagen.Uri" alt="@imagen.Name" width="50" height="15" class="card-img-top img-fluid" />
+                    <div class="card-body">
+                        <a asp-controller="Home" asp-action="Descargar" asp-route-name="@imagen.Name" class="btn-sm btn btn-primary">Descargar</a>
+                        <a asp-controller="Home" asp-action="Eliminar" asp-route-name="@imagen.Name" class="btn-sm btn btn-danger">Eliminar</a>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 </div>

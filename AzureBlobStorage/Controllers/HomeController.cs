@@ -1,7 +1,6 @@
 ﻿using Azure.Storage.Blobs;
 using AzureBlobStorage.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 
 namespace AzureBlobStorage.Controllers
 {
@@ -21,27 +20,51 @@ namespace AzureBlobStorage.Controllers
             _blobServiceClient = blobServiceClient;
         }
 
-        public IActionResult Index()
-        {
-            return View();
-        }
-        [HttpPost]
-        public async Task<IActionResult> InsertarEmpleado(string nombre, string apellido, int edad, IFormFile perfil)
+        public async Task<IActionResult> Index()
         {
             BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(_configuration.GetConnectionString("nameblob"));
-            BlobClient blobClient = containerClient.GetBlobClient(perfil.FileName);
-            await blobClient.UploadAsync(perfil.OpenReadStream());
+            var blobs = new List<Blob>();
+            await foreach (var blobItem in containerClient.GetBlobsAsync())
+            {
+                blobs.Add(new Blob
+                {
+                    Name = blobItem.Name,
+                    Uri = containerClient.Uri.AbsoluteUri + "/" + blobItem.Name,
+                    ContentType = blobItem.Properties.ContentType
+                });
+            }
+            return View(blobs);
+        }
+        [HttpPost]
+        public async Task<IActionResult> Index(IFormFile perfil)
+        {
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(_configuration.GetConnectionString("nameblob"));
+            await containerClient.UploadBlobAsync(perfil.FileName, perfil.OpenReadStream());
             return RedirectToAction("Index");
         }
-        public IActionResult Privacy()
+        [HttpGet("Descargar")]
+        public async Task<IActionResult> Descargar(string name)
         {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(_configuration.GetConnectionString("nameblob"));
+            var blob = containerClient.GetBlobClient(name);
+            if (await blob.ExistsAsync())
+            {
+                var image = await blob.DownloadAsync();
+                return File(image.Value.Content, image.Value.ContentType, name);
+            }
+            return RedirectToAction("Index");
+        }        
+        [HttpGet("Eliminar")]
+        public async Task<IActionResult> Eliminar(string name)
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(_configuration.GetConnectionString("nameblob"));
+            var blob = containerClient.GetBlobClient(name);
+            if (await blob.ExistsAsync())
+            {
+                blob = containerClient.GetBlobClient(name);
+                await blob.DeleteIfExistsAsync();
+            }
+            return RedirectToAction("Index");
         }
     }
 }
